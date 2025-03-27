@@ -34,7 +34,7 @@ snellius-final-assignment/
 
 - **Task Folders (e.g., task1):**
   - **base_setup.py:** Loads and processes the dataset (using OpenML), creates data splits, defines image transforms, and creates DataLoader objects. These variables are then imported into experiment scripts.
-  - **experiment1.py (and experiment2.py, etc.):** These files define the model architecture (for example, a ResNet‑18 style `birdsCNN` in task1), set up the training procedure using PyTorch Lightning, and use WandB for logging.
+  - **experiment1.py (and experiment2.py, etc.):** These files define the model architecture (for example, a ResNet‑18 style `birdsCNN` in exp1), set up the training procedure using PyTorch Lightning, and use WandB for logging.
 
 ## Running on Snellius
 

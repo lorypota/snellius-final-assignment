@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 
 # Import the base setup
-from base_setup import train_loader, val_loader, test_loader, label_to_idx, idx_to_label
+from .base_setup import train_loader, val_loader, test_loader, label_to_idx, idx_to_label
 
 # ---------------------------
 # Model definitions for Task 1
