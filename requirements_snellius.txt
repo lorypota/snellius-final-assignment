@@ -1,0 +1,8 @@
+pytest
+openml==0.15.1
+tqdm
+seaborn
+pytorch_lightning
+opencv-python
+git+https://github.com/openml/openml-pytorch
+wandb
