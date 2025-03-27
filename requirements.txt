@@ -1,0 +1,15 @@
+setuptools
+pytest
+openml==0.15.1
+scikit-learn~=1.6
+tqdm
+jupyterlab
+matplotlib
+seaborn
+torch
+torchvision
+pytorch_lightning
+opencv-python
+pillow
+git+https://github.com/openml/openml-pytorch
+wandb 
