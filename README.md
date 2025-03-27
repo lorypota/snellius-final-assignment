@@ -110,11 +110,18 @@ snellius-final-assignment/
   ```
 
 - **Job Management:**
+
   ```bash
   sbatch <job_script.sh>
   squeue -u <your_username>
   scontrol show job <job_id>
   scancel <job_id>
+  ```
+
+- **Credits check:**
+
+  ```bash
+  accinfo
   ```
 
 ## Further Resources
