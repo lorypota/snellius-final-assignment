@@ -20,7 +20,7 @@ snellius-final-assignment/
 │   ├── base_setup.py          # Similar setup for a different dataset
 │   └── experiment1.py
 ├── requirements.txt           # Python package requirements
-├── reqs_snellius.txt          # Python requirements for snellius (without pre-loaded modules)
+├── requirements_snellius.txt  # Requirements without pre-loaded modules
 └── README.md
 ```
 
