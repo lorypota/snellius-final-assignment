@@ -12,6 +12,6 @@ module purge
 module load 2023
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-source ../my_venv/bin/activate  # Note the relative path to your venv if it's in the project root
+source ../my_venv/bin/activate
 
 srun python -u experiment1.py
