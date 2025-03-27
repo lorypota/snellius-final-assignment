@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --partition=gpu_mig
+#SBATCH --gpus=1
+#SBATCH --job-name=Task1_Exp1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=9
+#SBATCH --time=02:24:00
+#SBATCH --output=slurm_output_%A.txt
+#SBATCH --error=slurm_error_%A.txt
+
+module purge
+module load 2023
+module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
+
+source ../my_venv/bin/activate  # Note the relative path to your venv if it's in the project root
+
+srun python -u experiment1.py
