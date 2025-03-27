@@ -14,4 +14,8 @@ module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
 source ../my_venv/bin/activate
 
-srun python -u experiment1.py
+# Set PYTHONPATH to the project root (one level above the current folder)
+export PYTHONPATH=$(pwd)/..
+
+# Run experiment1 as a module using its full package name.
+srun python -u -m task1_birds.experiment1
