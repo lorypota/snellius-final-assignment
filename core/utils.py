@@ -1,6 +1,4 @@
-# core/utils.py
 import matplotlib.pyplot as plt
-import numpy as np
 
 def visualize_sets(x, y, idx_to_label, selected_classes, title=""):
     """

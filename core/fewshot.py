@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset
 import matplotlib.pyplot as plt
 
-# For evaluation of few shot learning in part 3
+# For evaluation of few shot learning in task 3
 # Create subsets of examples for specific subsets of classes
 class SubsetByClass(Dataset):
     def __init__(self, base_dataset, allowed_classes):

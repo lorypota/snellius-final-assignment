@@ -1,12 +1,5 @@
-# core/dataloading.py
-import os
-from pathlib import Path
-import pandas as pd
-import numpy as np
-import openml
-from sklearn.model_selection import train_test_split
 from PIL import Image
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset
 from torchvision import transforms
 import torch
 from collections import defaultdict
