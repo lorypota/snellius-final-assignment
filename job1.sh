@@ -18,4 +18,4 @@ source my_venv/bin/activate
 export PYTHONPATH=$(pwd)
 
 # Run experiment1 as a module using its full package name.
-srun python -u -m task1_birds.experiment1
+srun python -u -m task1_birds.experiment2
