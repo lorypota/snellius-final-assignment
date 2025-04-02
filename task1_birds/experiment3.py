@@ -53,7 +53,7 @@ class BasicBlock(nn.Module):
 
 # ResNet‑18–style network built from scratch.
 class birdsCNN(pl.LightningModule):
-    def __init__(self, block, layers, num_classes=315, dropout_rate=0.3):
+    def __init__(self, block, layers, num_classes=315, dropout_rate=0.4):
         super().__init__()
         self.in_channels = 64
         # Initial convolution: 3x128x128 -> 64x128x128 (no downsampling here)
@@ -75,7 +75,7 @@ class birdsCNN(pl.LightningModule):
         self.fc = nn.Linear(512 * block.expansion, num_classes)
         
         # Metrics
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.loss_fn = nn.CrossEntropyLoss(label_smoothing=0.1)
         self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.f1_score = torchmetrics.F1Score(task="multiclass", num_classes=num_classes)
         
@@ -152,14 +152,21 @@ class birdsCNN(pl.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        # Increase weight decay for more regularization
-        optimizer = torch.optim.AdamW(self.parameters(), lr=0.001, weight_decay=0.02)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=3)
+        # Slightly increase weight decay
+        optimizer = torch.optim.AdamW(self.parameters(), lr=0.0005, weight_decay=0.025)
+        
+        # Switch to cosine annealing scheduler instead of ReduceLROnPlateau
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=20, # max epochs
+            eta_min=1e-6
+        )
+        
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
                 "scheduler": scheduler,
-                "monitor": "val_loss"
+                "interval": "epoch"
             }
         }
 
@@ -167,7 +174,7 @@ class birdsCNN(pl.LightningModule):
 # Instantiate model and loggers
 # ---------------------------
 # This configuration [2,2,2,2] corresponds to ResNet‑18.
-model_1 = birdsCNN(BasicBlock, [2, 2, 2, 2], num_classes=315, dropout_rate=0.3)
+model_1 = birdsCNN(BasicBlock, [2, 2, 2, 2], num_classes=315, dropout_rate=0.4)
 
 # Initialize the WandbLogger
 wandb_logger = WandbLogger(
@@ -175,29 +182,36 @@ wandb_logger = WandbLogger(
     entity="lorypota-eindhoven-university-of-technology"
 )
 
+# Define paths for model saving
+RESULTS_DIR = os.path.join(os.getcwd(), "results")
+CHECKPOINTS_DIR = os.path.join(RESULTS_DIR, "checkpoints")
+OUTPUTS_DIR = os.path.join(RESULTS_DIR, "outputs")
+
 # Initialize the custom ModelLogger with a persistent path
 model_logger = ModelLogger(
     model_name="model_1",
     test_loader=test_loader,
-    output_dir=os.path.join(os.environ.get('HOME', './'), "persistent_outputs"),
+    output_dir=OUTPUTS_DIR,
     device="cuda" if torch.cuda.is_available() else "cpu"
 )
 
 # Log hyperparameters
 wandb_logger.log_hyperparams({
-    "learning_rate": 0.001,
+    "learning_rate": 0.0005,  # Reduced learning rate
     "batch_size": 32,
-    "architecture": "ResNetModified1",
+    "architecture": "ResNetModified3",
     "num_classes": 315,
     "max_epochs": 20,
-    "dropout_rate": 0.3,
-    "weight_decay": 0.02,
+    "dropout_rate": 0.4,  # Slightly increased
+    "weight_decay": 0.025,  # Slightly increased
+    "label_smoothing": 0.1,  # Added label smoothing
+    "scheduler": "CosineAnnealing"  # Changed scheduler
 })
 
 # ---------------------------
 # Training configuration
 # ---------------------------
-def train_model(model, max_epochs=30, resume_checkpoint=None):
+def train_model(model, max_epochs=20, resume_checkpoint=None):
     # Add early stopping
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
@@ -206,9 +220,9 @@ def train_model(model, max_epochs=30, resume_checkpoint=None):
         mode='min'
     )
     
-    # Add model checkpoint with a persistent path
+    # Add model checkpoint to save to results/checkpoints
     checkpoint_callback = ModelCheckpoint(
-        dirpath=os.path.join(os.environ.get('HOME', './'), "persistent_checkpoints"),
+        dirpath=CHECKPOINTS_DIR,
         monitor='val_loss',
         filename='best-model-{epoch:02d}-{val_loss:.2f}',
         save_top_k=1,
@@ -224,6 +238,7 @@ def train_model(model, max_epochs=30, resume_checkpoint=None):
         accelerator="auto",
         log_every_n_steps=1,
         callbacks=[early_stop_callback, checkpoint_callback, model_logger, wandb_save_callback],
+        gradient_clip_val=0.5,  # Add light gradient clipping
     )
     
     if resume_checkpoint:
