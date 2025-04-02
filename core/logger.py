@@ -191,28 +191,3 @@ class ModelLogger(pl.Callback):
     # Callback to store the model and metrics at the end of training
     def on_train_end(self, trainer, pl_module):
         self.finalize(pl_module)
-        
-class SaveToWandbCallback(Callback):
-    def __init__(self, wandb_logger):
-        super().__init__()
-        self.wandb_logger = wandb_logger
-        
-    def on_validation_end(self, trainer, pl_module):
-        # Skip if no checkpoint callback exists
-        if not trainer.checkpoint_callback:
-            return
-            
-        # Get the best model path from the checkpoint callback
-        best_model_path = trainer.checkpoint_callback.best_model_path
-        
-        # Skip if no best model has been saved yet
-        if not best_model_path or not os.path.exists(best_model_path):
-            return
-        
-        # Log the best model as an artifact
-        artifact = self.wandb_logger.experiment.artifact(
-            name=f"model-{trainer.global_step}",
-            type="model"
-        )
-        artifact.add_file(best_model_path, name="best_model.ckpt")
-        self.wandb_logger.experiment.log_artifact(artifact)

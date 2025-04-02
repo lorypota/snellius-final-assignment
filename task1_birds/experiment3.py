@@ -5,7 +5,7 @@ import torchmetrics
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
-from core.logger import ModelLogger, SaveToWandbCallback
+from core.logger import ModelLogger
 
 # Import the base setup
 from .base_setup import train_loader, val_loader, test_loader, label_to_idx, idx_to_label
@@ -229,15 +229,12 @@ def train_model(model, max_epochs=20, resume_checkpoint=None):
         mode='min'
     )
     
-    # Add W&B model saving callback
-    wandb_save_callback = SaveToWandbCallback(wandb_logger)
-    
     trainer = pl.Trainer(
         max_epochs=max_epochs,
         logger=wandb_logger,
         accelerator="auto",
         log_every_n_steps=1,
-        callbacks=[early_stop_callback, checkpoint_callback, model_logger, wandb_save_callback],
+        callbacks=[early_stop_callback, checkpoint_callback, model_logger],
         gradient_clip_val=0.5,  # Add light gradient clipping
     )
     
