@@ -1,0 +1,58 @@
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA A100-SXM4-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:654: Checkpoint directory /gpfs/home1/scur0895/snellius-final-assignment/results/checkpoints exists and is not empty.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+   | Name     | Type               | Params | Mode
+---------------------------------------------------------
+0  | conv1    | Conv2d             | 1.7 K  | train
+1  | bn1      | BatchNorm2d        | 128    | train
+2  | relu     | ReLU               | 0      | train
+3  | layer1   | Sequential         | 147 K  | train
+4  | layer2   | Sequential         | 525 K  | train
+5  | layer3   | Sequential         | 2.1 M  | train
+6  | layer4   | Sequential         | 8.4 M  | train
+7  | avgpool  | AdaptiveAvgPool2d  | 0      | train
+8  | dropout  | Dropout            | 0      | train
+9  | fc       | Linear             | 161 K  | train
+10 | loss_fn  | CrossEntropyLoss   | 0      | train
+11 | accuracy | MulticlassAccuracy | 0      | train
+12 | f1_score | MulticlassF1Score  | 0      | train
+---------------------------------------------------------
+11.3 M    Trainable params
+0         Non-trainable params
+11.3 M    Total params
+45.322    Total estimated model params size (MB)
+70        Modules in train mode
+0         Modules in eval mode
+SLURM auto-requeueing enabled. Setting signal handlers.
+Epoch 19: 100%|██████████| 982/982 [01:26<00:00, 11.37it/s, v_num=a280, train_loss_step=5.360, train_acc_step=0.000, train_f1_step=0.000, val_loss=1.580, val_acc=0.873, val_f1=0.873, train_loss_epoch=1.410, train_acc_epoch=0.944, train_f1_epoch=0.944]Test Accuracy: 0.8738
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+Best validation accuracy: 0.8714 at epoch 19 (smoothed over 3 epochs)     
+Metric val_loss improved. New best score: 4.745
+Metric val_loss improved by 0.694 >= min_delta = 0.0. New best score: 4.050
+Metric val_loss improved by 0.603 >= min_delta = 0.0. New best score: 3.447
+Metric val_loss improved by 0.394 >= min_delta = 0.0. New best score: 3.053
+Metric val_loss improved by 0.311 >= min_delta = 0.0. New best score: 2.742
+Metric val_loss improved by 0.116 >= min_delta = 0.0. New best score: 2.627
+Metric val_loss improved by 0.261 >= min_delta = 0.0. New best score: 2.366
+Metric val_loss improved by 0.173 >= min_delta = 0.0. New best score: 2.193
+Metric val_loss improved by 0.103 >= min_delta = 0.0. New best score: 2.090
+Metric val_loss improved by 0.096 >= min_delta = 0.0. New best score: 1.994
+Metric val_loss improved by 0.068 >= min_delta = 0.0. New best score: 1.926
+Metric val_loss improved by 0.113 >= min_delta = 0.0. New best score: 1.813
+Metric val_loss improved by 0.031 >= min_delta = 0.0. New best score: 1.782
+Metric val_loss improved by 0.082 >= min_delta = 0.0. New best score: 1.700
+Metric val_loss improved by 0.030 >= min_delta = 0.0. New best score: 1.670
+Metric val_loss improved by 0.023 >= min_delta = 0.0. New best score: 1.647
+Metric val_loss improved by 0.041 >= min_delta = 0.0. New best score: 1.606
+Metric val_loss improved by 0.016 >= min_delta = 0.0. New best score: 1.589
+Metric val_loss improved by 0.002 >= min_delta = 0.0. New best score: 1.588
+Metric val_loss improved by 0.004 >= min_delta = 0.0. New best score: 1.584
+`Trainer.fit` stopped: `max_epochs=20` reached.
+
+                                                                          
+Epoch 19: 100%|██████████| 982/982 [01:49<00:00,  8.98it/s, v_num=a280, train_loss_step=5.360, train_acc_step=0.000, train_f1_step=0.000, val_loss=1.580, val_acc=0.873, val_f1=0.873, train_loss_epoch=1.410, train_acc_epoch=0.944, train_f1_epoch=0.944]

@@ -1,0 +1,77 @@
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA A100-SXM4-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+   | Name     | Type               | Params | Mode
+---------------------------------------------------------
+0  | conv1    | Conv2d             | 1.7 K  | train
+1  | bn1      | BatchNorm2d        | 128    | train
+2  | relu     | ReLU               | 0      | train
+3  | layer1   | Sequential         | 147 K  | train
+4  | layer2   | Sequential         | 525 K  | train
+5  | layer3   | Sequential         | 2.1 M  | train
+6  | layer4   | Sequential         | 8.4 M  | train
+7  | avgpool  | AdaptiveAvgPool2d  | 0      | train
+8  | dropout  | Dropout            | 0      | train
+9  | fc       | Linear             | 161 K  | train
+10 | loss_fn  | CrossEntropyLoss   | 0      | train
+11 | accuracy | MulticlassAccuracy | 0      | train
+12 | f1_score | MulticlassF1Score  | 0      | train
+---------------------------------------------------------
+11.3 M    Trainable params
+0         Non-trainable params
+11.3 M    Total params
+45.322    Total estimated model params size (MB)
+70        Modules in train mode
+0         Modules in eval mode
+SLURM auto-requeueing enabled. Setting signal handlers.
+Epoch 1: 100%|██████████| 982/982 [01:24<00:00, 11.67it/s, v_num=sa8h, train_loss_step=6.890, train_acc_step=0.000, train_f1_step=0.000, val_loss=4.780, val_acc=0.0838, val_f1=0.0838, train_loss_epoch=5.280, train_acc_epoch=0.0363, train_f1_epoch=0.0363]  
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+Validation DataLoader 0: 100%|██████████| 246/246 [00:09<00:00, 24.66it/s]
+Metric val_loss improved. New best score: 4.776
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/gpfs/home1/scur0895/snellius-final-assignment/task1_birds/experiment3.py", line 252, in <module>
+    train_model(model_1, max_epochs=20)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/task1_birds/experiment3.py", line 247, in train_model
+    trainer.fit(model, train_loader, val_loader)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/trainer.py", line 561, in fit
+    call._call_and_handle_interrupt(
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/call.py", line 48, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/trainer.py", line 599, in _fit_impl
+    self._run(model, ckpt_path=ckpt_path)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/trainer.py", line 1012, in _run
+    results = self._run_stage()
+              ^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/trainer.py", line 1056, in _run_stage
+    self.fit_loop.run()
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/fit_loop.py", line 216, in run
+    self.advance()
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/fit_loop.py", line 455, in advance
+    self.epoch_loop.run(self._data_fetcher)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/training_epoch_loop.py", line 151, in run
+    self.on_advance_end(data_fetcher)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/training_epoch_loop.py", line 370, in on_advance_end
+    self.val_loop.run()
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/utilities.py", line 179, in _decorator
+    return loop_run(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 152, in run
+    return self.on_run_end()
+           ^^^^^^^^^^^^^^^^^
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 309, in on_run_end
+    self._on_evaluation_end()
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/loops/evaluation_loop.py", line 354, in _on_evaluation_end
+    call._call_callback_hooks(trainer, hook_name, *args, **kwargs)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/call.py", line 227, in _call_callback_hooks
+    fn(trainer, trainer.lightning_module, *args, **kwargs)
+  File "/gpfs/home1/scur0895/snellius-final-assignment/core/logger.py", line 213, in on_validation_end
+    artifact = self.wandb_logger.experiment.artifact(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Run' object has no attribute 'artifact'

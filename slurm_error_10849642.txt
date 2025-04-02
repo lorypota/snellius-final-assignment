@@ -1,0 +1,41 @@
+/gpfs/home1/scur0895/snellius-final-assignment/task1_birds/base_setup.py:15: FutureWarning: ``download_all_files`` is experimental and is likely to break with new releases.
+  BRD = openml.datasets.get_dataset(46770, download_all_files=True)
+wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
+wandb: Currently logged in as: lorypota (lorypota-eindhoven-university-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: Tracking run with wandb version 0.19.8
+wandb: Run data is saved locally in ./wandb/run-20250327_230518-ptc1chzh
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run eager-glitter-3
+wandb: ⭐️ View project at https://wandb.ai/lorypota-eindhoven-university-of-technology/birds_classification
+wandb: 🚀 View run at https://wandb.ai/lorypota-eindhoven-university-of-technology/birds_classification/runs/ptc1chzh
+You are using the plain ModelCheckpoint callback. Consider using LitModelCheckpoint which with seamless uploading to Model registry.
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+HPU available: False, using: 0 HPUs
+You are using a CUDA device ('NVIDIA A100-SXM4-40GB MIG 3g.20gb') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+
+   | Name     | Type               | Params | Mode 
+---------------------------------------------------------
+0  | conv1    | Conv2d             | 1.7 K  | train
+1  | bn1      | BatchNorm2d        | 128    | train
+2  | relu     | ReLU               | 0      | train
+3  | layer1   | Sequential         | 147 K  | train
+4  | layer2   | Sequential         | 525 K  | train
+5  | layer3   | Sequential         | 2.1 M  | train
+6  | layer4   | Sequential         | 8.4 M  | train
+7  | avgpool  | AdaptiveAvgPool2d  | 0      | train
+8  | fc       | Linear             | 161 K  | train
+9  | loss_fn  | CrossEntropyLoss   | 0      | train
+10 | accuracy | MulticlassAccuracy | 0      | train
+---------------------------------------------------------
+11.3 M    Trainable params
+0         Non-trainable params
+11.3 M    Total params
+45.322    Total estimated model params size (MB)
+68        Modules in train mode
+0         Modules in eval mode
+SLURM auto-requeueing enabled. Setting signal handlers.
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
+`Trainer.fit` stopped: `max_epochs=20` reached.

@@ -1,0 +1,123 @@
+{
+  "os": "Linux-5.14.0-427.42.1.el9_4.x86_64-x86_64-with-glibc2.34",
+  "python": "CPython 3.11.3",
+  "startedAt": "2025-03-27T22:05:18.076110Z",
+  "program": "-m task1_birds.experiment1",
+  "git": {
+    "remote": "git@github.com:lorypota/snellius-final-assignment.git",
+    "commit": "1e6211f8d5ed2d49a39af6131eb5675fc2b7ac4f"
+  },
+  "email": "lorenzokaide@gmail.com",
+  "root": ".",
+  "host": "gcn2.local.snellius.surf.nl",
+  "executable": "/gpfs/home1/scur0895/snellius-final-assignment/my_venv/bin/python",
+  "cpu_count": 72,
+  "cpu_count_logical": 72,
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "gpu_count": 4,
+  "disk": {
+    "/": {
+      "total": "270185807872",
+      "used": "3735670784"
+    }
+  },
+  "memory": {
+    "total": "540635594752"
+  },
+  "cpu": {
+    "count": 72,
+    "countLogical": 72
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA A100-SXM4-40GB",
+      "memoryTotal": "42949672960",
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100-SXM4-40GB",
+      "memoryTotal": "42949672960",
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100-SXM4-40GB",
+      "memoryTotal": "42949672960",
+      "architecture": "Ampere"
+    },
+    {
+      "name": "NVIDIA A100-SXM4-40GB",
+      "memoryTotal": "42949672960",
+      "architecture": "Ampere"
+    }
+  ],
+  "slurm": {
+    "cluster_name": "snellius",
+    "conf": "/var/spool/slurm/slurmd/conf-cache/slurm.conf",
+    "cpu_bind": "quiet,mask_cpu:0x0000000000000001FF",
+    "cpu_bind_list": "0x0000000000000001FF",
+    "cpu_bind_type": "mask_cpu:",
+    "cpu_bind_verbose": "quiet",
+    "cpus_on_node": "9",
+    "cpus_per_task": "9",
+    "distribution": "cyclic",
+    "eclibr": "0",
+    "ecplug": "1",
+    "erlast": "srun",
+    "ersbac": "1",
+    "ersrun": "1",
+    "export_env": "ALL",
+    "get_user_env": "1",
+    "gpus": "1",
+    "gpus_on_node": "1",
+    "gtids": "0",
+    "job_account": "gputue004",
+    "job_cpus_per_node": "9",
+    "job_end_time": "1743121613",
+    "job_gid": "62689",
+    "job_gpus": "0",
+    "job_id": "10849642",
+    "job_name": "Task1_Exp1",
+    "job_nodelist": "gcn2",
+    "job_num_nodes": "1",
+    "job_partition": "gpu_mig",
+    "job_qos": "normal",
+    "job_start_time": "1743112972",
+    "job_uid": "63155",
+    "job_user": "scur0895",
+    "jobid": "10849642",
+    "launch_node_ipaddr": "172.18.62.2",
+    "localid": "0",
+    "mpi_type": "pmix",
+    "nnodes": "1",
+    "nodeid": "0",
+    "nodelist": "gcn2",
+    "nprocs": "1",
+    "ntasks": "1",
+    "pmix_mapping_serv": "(vector,(0,1,1))",
+    "pmixp_abort_agent_port": "33425",
+    "prio_process": "0",
+    "procid": "0",
+    "script_context": "prolog_task",
+    "srun_comm_host": "172.18.62.2",
+    "srun_comm_port": "39411",
+    "step_gpus": "0",
+    "step_gres": "gres/cpu:0",
+    "step_id": "0",
+    "step_launcher_port": "39411",
+    "step_nodelist": "gcn2",
+    "step_num_nodes": "1",
+    "step_num_tasks": "1",
+    "step_resv_ports": "16342-16343",
+    "step_tasks_per_node": "1",
+    "stepid": "0",
+    "submit_dir": "/gpfs/home1/scur0895/snellius-final-assignment",
+    "submit_host": "int4.local.snellius.surf.nl",
+    "task_pid": "2557428",
+    "tasks_per_node": "1",
+    "topology_addr": "root.ibsw7.gcn2",
+    "topology_addr_pattern": "switch.switch.node",
+    "tres_per_task": "cpu=9",
+    "umask": "0077"
+  },
+  "cudaVersion": "12.7"
+}
