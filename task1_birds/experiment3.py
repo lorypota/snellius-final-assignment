@@ -216,7 +216,7 @@ def train_model(model, max_epochs=20, resume_checkpoint=None):
     early_stop_callback = EarlyStopping(
         monitor='val_loss',
         patience=5,
-        verbose=True,
+        verbose=False,
         mode='min'
     )
     
@@ -236,6 +236,7 @@ def train_model(model, max_epochs=20, resume_checkpoint=None):
         log_every_n_steps=1,
         callbacks=[early_stop_callback, checkpoint_callback, model_logger],
         gradient_clip_val=0.5,  # Add light gradient clipping
+        enable_progress_bar=False,
     )
     
     if resume_checkpoint:

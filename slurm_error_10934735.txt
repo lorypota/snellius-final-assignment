@@ -1,219 +1,0 @@
-/gpfs/home1/scur0895/snellius-final-assignment/task1_birds/base_setup.py:15: FutureWarning: ``download_all_files`` is experimental and is likely to break with new releases.
-  BRD = openml.datasets.get_dataset(46770, download_all_files=True)
-wandb: Using wandb-core as the SDK backend.  Please refer to https://wandb.me/wandb-core for more information.
-wandb: Currently logged in as: lorypota (lorypota-eindhoven-university-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
-wandb: Tracking run with wandb version 0.19.8
-wandb: Run data is saved locally in ./wandb/run-20250402_170244-odtxa280
-wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run decent-fire-6
-wandb: ⭐️ View project at https://wandb.ai/lorypota-eindhoven-university-of-technology/birds_classification
-wandb: 🚀 View run at https://wandb.ai/lorypota-eindhoven-university-of-technology/birds_classification/runs/odtxa280
-GPU available: True (cuda), used: True
-TPU available: False, using: 0 TPU cores
-HPU available: False, using: 0 HPUs
-You are using a CUDA device ('NVIDIA A100-SXM4-40GB') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
-/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/callbacks/model_checkpoint.py:654: Checkpoint directory /gpfs/home1/scur0895/snellius-final-assignment/results/checkpoints exists and is not empty.
-LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
-
-   | Name     | Type               | Params | Mode 
----------------------------------------------------------
-0  | conv1    | Conv2d             | 1.7 K  | train
-1  | bn1      | BatchNorm2d        | 128    | train
-2  | relu     | ReLU               | 0      | train
-3  | layer1   | Sequential         | 147 K  | train
-4  | layer2   | Sequential         | 525 K  | train
-5  | layer3   | Sequential         | 2.1 M  | train
-6  | layer4   | Sequential         | 8.4 M  | train
-7  | avgpool  | AdaptiveAvgPool2d  | 0      | train
-8  | dropout  | Dropout            | 0      | train
-9  | fc       | Linear             | 161 K  | train
-10 | loss_fn  | CrossEntropyLoss   | 0      | train
-11 | accuracy | MulticlassAccuracy | 0      | train
-12 | f1_score | MulticlassF1Score  | 0      | train
----------------------------------------------------------
-11.3 M    Trainable params
-0         Non-trainable params
-11.3 M    Total params
-45.322    Total estimated model params size (MB)
-70        Modules in train mode
-0         Modules in eval mode
-SLURM auto-requeueing enabled. Setting signal handlers.
-/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'val_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
-/gpfs/home1/scur0895/snellius-final-assignment/my_venv/lib/python3.11/site-packages/pytorch_lightning/trainer/connectors/data_connector.py:425: The 'train_dataloader' does not have many workers which may be a bottleneck. Consider increasing the value of the `num_workers` argument` to `num_workers=8` in the `DataLoader` to improve performance.
-Metric val_loss improved. New best score: 4.745
-Metric val_loss improved by 0.694 >= min_delta = 0.0. New best score: 4.050
-Metric val_loss improved by 0.603 >= min_delta = 0.0. New best score: 3.447
-Metric val_loss improved by 0.394 >= min_delta = 0.0. New best score: 3.053
-Metric val_loss improved by 0.311 >= min_delta = 0.0. New best score: 2.742
-Metric val_loss improved by 0.116 >= min_delta = 0.0. New best score: 2.627
-Metric val_loss improved by 0.261 >= min_delta = 0.0. New best score: 2.366
-Metric val_loss improved by 0.173 >= min_delta = 0.0. New best score: 2.193
-Metric val_loss improved by 0.103 >= min_delta = 0.0. New best score: 2.090
-Metric val_loss improved by 0.096 >= min_delta = 0.0. New best score: 1.994
-Metric val_loss improved by 0.068 >= min_delta = 0.0. New best score: 1.926
-Metric val_loss improved by 0.113 >= min_delta = 0.0. New best score: 1.813
-Metric val_loss improved by 0.031 >= min_delta = 0.0. New best score: 1.782
-Metric val_loss improved by 0.082 >= min_delta = 0.0. New best score: 1.700
-Metric val_loss improved by 0.030 >= min_delta = 0.0. New best score: 1.670
-Metric val_loss improved by 0.023 >= min_delta = 0.0. New best score: 1.647
-Metric val_loss improved by 0.041 >= min_delta = 0.0. New best score: 1.606
-Metric val_loss improved by 0.016 >= min_delta = 0.0. New best score: 1.589
-Metric val_loss improved by 0.002 >= min_delta = 0.0. New best score: 1.588
-Metric val_loss improved by 0.004 >= min_delta = 0.0. New best score: 1.584
-`Trainer.fit` stopped: `max_epochs=20` reached.
-
-Evaluating on test data:   0%|          | 0/307 [00:00<?, ?it/s][A
-Evaluating on test data:   1%|          | 2/307 [00:00<00:25, 11.85it/s][A
-Evaluating on test data:   1%|▏         | 4/307 [00:00<00:23, 12.83it/s][A
-Evaluating on test data:   2%|▏         | 6/307 [00:00<00:22, 13.36it/s][A
-Evaluating on test data:   3%|▎         | 8/307 [00:00<00:21, 13.77it/s][A
-Evaluating on test data:   3%|▎         | 10/307 [00:00<00:21, 13.87it/s][A
-Evaluating on test data:   4%|▍         | 12/307 [00:00<00:20, 14.13it/s][A
-Evaluating on test data:   5%|▍         | 14/307 [00:01<00:20, 14.03it/s][A
-Evaluating on test data:   5%|▌         | 16/307 [00:01<00:20, 14.06it/s][A
-Evaluating on test data:   6%|▌         | 18/307 [00:01<00:20, 14.01it/s][A
-Evaluating on test data:   7%|▋         | 20/307 [00:01<00:20, 14.00it/s][A
-Evaluating on test data:   7%|▋         | 22/307 [00:01<00:20, 14.01it/s][A
-Evaluating on test data:   8%|▊         | 24/307 [00:01<00:20, 14.00it/s][A
-Evaluating on test data:   8%|▊         | 26/307 [00:01<00:20, 13.97it/s][A
-Evaluating on test data:   9%|▉         | 28/307 [00:02<00:20, 13.94it/s][A
-Evaluating on test data:  10%|▉         | 30/307 [00:02<00:19, 13.88it/s][A
-Evaluating on test data:  10%|█         | 32/307 [00:02<00:20, 13.62it/s][A
-Evaluating on test data:  11%|█         | 34/307 [00:02<00:20, 13.65it/s][A
-Evaluating on test data:  12%|█▏        | 36/307 [00:02<00:19, 13.73it/s][A
-Evaluating on test data:  12%|█▏        | 38/307 [00:02<00:19, 13.74it/s][A
-Evaluating on test data:  13%|█▎        | 40/307 [00:02<00:19, 13.67it/s][A
-Evaluating on test data:  14%|█▎        | 42/307 [00:03<00:19, 13.72it/s][A
-Evaluating on test data:  14%|█▍        | 44/307 [00:03<00:19, 13.67it/s][A
-Evaluating on test data:  15%|█▍        | 46/307 [00:03<00:18, 13.80it/s][A
-Evaluating on test data:  16%|█▌        | 48/307 [00:03<00:18, 13.94it/s][A
-Evaluating on test data:  16%|█▋        | 50/307 [00:03<00:18, 13.95it/s][A
-Evaluating on test data:  17%|█▋        | 52/307 [00:03<00:18, 13.95it/s][A
-Evaluating on test data:  18%|█▊        | 54/307 [00:03<00:18, 13.90it/s][A
-Evaluating on test data:  18%|█▊        | 56/307 [00:04<00:18, 13.91it/s][A
-Evaluating on test data:  19%|█▉        | 58/307 [00:04<00:17, 13.87it/s][A
-Evaluating on test data:  20%|█▉        | 60/307 [00:04<00:17, 13.88it/s][A
-Evaluating on test data:  20%|██        | 62/307 [00:04<00:17, 13.89it/s][A
-Evaluating on test data:  21%|██        | 64/307 [00:04<00:17, 13.84it/s][A
-Evaluating on test data:  21%|██▏       | 66/307 [00:04<00:17, 13.85it/s][A
-Evaluating on test data:  22%|██▏       | 68/307 [00:04<00:17, 13.86it/s][A
-Evaluating on test data:  23%|██▎       | 70/307 [00:05<00:16, 13.95it/s][A
-Evaluating on test data:  23%|██▎       | 72/307 [00:05<00:16, 13.95it/s][A
-Evaluating on test data:  24%|██▍       | 74/307 [00:05<00:16, 13.76it/s][A
-Evaluating on test data:  25%|██▍       | 76/307 [00:05<00:16, 13.74it/s][A
-Evaluating on test data:  25%|██▌       | 78/307 [00:05<00:16, 13.70it/s][A
-Evaluating on test data:  26%|██▌       | 80/307 [00:05<00:16, 13.68it/s][A
-Evaluating on test data:  27%|██▋       | 82/307 [00:05<00:16, 13.59it/s][A
-Evaluating on test data:  27%|██▋       | 84/307 [00:06<00:16, 13.62it/s][A
-Evaluating on test data:  28%|██▊       | 86/307 [00:06<00:16, 13.65it/s][A
-Evaluating on test data:  29%|██▊       | 88/307 [00:06<00:15, 13.72it/s][A
-Evaluating on test data:  29%|██▉       | 90/307 [00:06<00:15, 13.97it/s][A
-Evaluating on test data:  30%|██▉       | 92/307 [00:06<00:15, 14.02it/s][A
-Evaluating on test data:  31%|███       | 94/307 [00:06<00:15, 13.96it/s][A
-Evaluating on test data:  31%|███▏      | 96/307 [00:06<00:15, 13.77it/s][A
-Evaluating on test data:  32%|███▏      | 98/307 [00:07<00:15, 13.73it/s][A
-Evaluating on test data:  33%|███▎      | 100/307 [00:07<00:15, 13.72it/s][A
-Evaluating on test data:  33%|███▎      | 102/307 [00:07<00:15, 13.63it/s][A
-Evaluating on test data:  34%|███▍      | 104/307 [00:07<00:14, 13.76it/s][A
-Evaluating on test data:  35%|███▍      | 106/307 [00:07<00:14, 13.88it/s][A
-Evaluating on test data:  35%|███▌      | 108/307 [00:07<00:14, 13.74it/s][A
-Evaluating on test data:  36%|███▌      | 110/307 [00:07<00:14, 13.54it/s][A
-Evaluating on test data:  36%|███▋      | 112/307 [00:08<00:14, 13.59it/s][A
-Evaluating on test data:  37%|███▋      | 114/307 [00:08<00:14, 13.66it/s][A
-Evaluating on test data:  38%|███▊      | 116/307 [00:08<00:13, 13.95it/s][A
-Evaluating on test data:  38%|███▊      | 118/307 [00:08<00:13, 14.10it/s][A
-Evaluating on test data:  39%|███▉      | 120/307 [00:08<00:13, 14.31it/s][A
-Evaluating on test data:  40%|███▉      | 122/307 [00:08<00:13, 14.20it/s][A
-Evaluating on test data:  40%|████      | 124/307 [00:08<00:12, 14.14it/s][A
-Evaluating on test data:  41%|████      | 126/307 [00:09<00:12, 14.11it/s][A
-Evaluating on test data:  42%|████▏     | 128/307 [00:09<00:12, 14.13it/s][A
-Evaluating on test data:  42%|████▏     | 130/307 [00:09<00:12, 14.09it/s][A
-Evaluating on test data:  43%|████▎     | 132/307 [00:09<00:12, 14.24it/s][A
-Evaluating on test data:  44%|████▎     | 134/307 [00:09<00:12, 13.91it/s][A
-Evaluating on test data:  44%|████▍     | 136/307 [00:09<00:12, 13.95it/s][A
-Evaluating on test data:  45%|████▍     | 138/307 [00:09<00:12, 13.94it/s][A
-Evaluating on test data:  46%|████▌     | 140/307 [00:10<00:11, 13.92it/s][A
-Evaluating on test data:  46%|████▋     | 142/307 [00:10<00:11, 13.91it/s][A
-Evaluating on test data:  47%|████▋     | 144/307 [00:10<00:11, 13.89it/s][A
-Evaluating on test data:  48%|████▊     | 146/307 [00:10<00:11, 14.00it/s][A
-Evaluating on test data:  48%|████▊     | 148/307 [00:10<00:11, 13.96it/s][A
-Evaluating on test data:  49%|████▉     | 150/307 [00:10<00:11, 13.99it/s][A
-Evaluating on test data:  50%|████▉     | 152/307 [00:10<00:11, 13.89it/s][A
-Evaluating on test data:  50%|█████     | 154/307 [00:11<00:11, 13.81it/s][A
-Evaluating on test data:  51%|█████     | 156/307 [00:11<00:10, 13.85it/s][A
-Evaluating on test data:  51%|█████▏    | 158/307 [00:11<00:10, 13.65it/s][A
-Evaluating on test data:  52%|█████▏    | 160/307 [00:11<00:10, 13.61it/s][A
-Evaluating on test data:  53%|█████▎    | 162/307 [00:11<00:10, 13.70it/s][A
-Evaluating on test data:  53%|█████▎    | 164/307 [00:11<00:10, 13.78it/s][A
-Evaluating on test data:  54%|█████▍    | 166/307 [00:11<00:10, 13.73it/s][A
-Evaluating on test data:  55%|█████▍    | 168/307 [00:12<00:10, 13.81it/s][A
-Evaluating on test data:  55%|█████▌    | 170/307 [00:12<00:09, 13.79it/s][A
-Evaluating on test data:  56%|█████▌    | 172/307 [00:12<00:09, 13.79it/s][A
-Evaluating on test data:  57%|█████▋    | 174/307 [00:12<00:09, 13.81it/s][A
-Evaluating on test data:  57%|█████▋    | 176/307 [00:12<00:09, 13.84it/s][A
-Evaluating on test data:  58%|█████▊    | 178/307 [00:12<00:09, 13.83it/s][A
-Evaluating on test data:  59%|█████▊    | 180/307 [00:13<00:09, 13.85it/s][A
-Evaluating on test data:  59%|█████▉    | 182/307 [00:13<00:08, 14.01it/s][A
-Evaluating on test data:  60%|█████▉    | 184/307 [00:13<00:08, 13.87it/s][A
-Evaluating on test data:  61%|██████    | 186/307 [00:13<00:08, 13.82it/s][A
-Evaluating on test data:  61%|██████    | 188/307 [00:13<00:08, 13.85it/s][A
-Evaluating on test data:  62%|██████▏   | 190/307 [00:13<00:08, 13.96it/s][A
-Evaluating on test data:  63%|██████▎   | 192/307 [00:13<00:08, 13.97it/s][A
-Evaluating on test data:  63%|██████▎   | 194/307 [00:14<00:08, 13.85it/s][A
-Evaluating on test data:  64%|██████▍   | 196/307 [00:14<00:08, 13.82it/s][A
-Evaluating on test data:  64%|██████▍   | 198/307 [00:14<00:07, 13.94it/s][A
-Evaluating on test data:  65%|██████▌   | 200/307 [00:14<00:07, 14.00it/s][A
-Evaluating on test data:  66%|██████▌   | 202/307 [00:14<00:07, 14.14it/s][A
-Evaluating on test data:  66%|██████▋   | 204/307 [00:14<00:07, 14.08it/s][A
-Evaluating on test data:  67%|██████▋   | 206/307 [00:14<00:07, 13.96it/s][A
-Evaluating on test data:  68%|██████▊   | 208/307 [00:15<00:07, 13.98it/s][A
-Evaluating on test data:  68%|██████▊   | 210/307 [00:15<00:06, 13.92it/s][A
-Evaluating on test data:  69%|██████▉   | 212/307 [00:15<00:06, 14.02it/s][A
-Evaluating on test data:  70%|██████▉   | 214/307 [00:15<00:06, 13.91it/s][A
-Evaluating on test data:  70%|███████   | 216/307 [00:15<00:06, 14.05it/s][A
-Evaluating on test data:  71%|███████   | 218/307 [00:15<00:06, 14.03it/s][A
-Evaluating on test data:  72%|███████▏  | 220/307 [00:15<00:06, 14.01it/s][A
-Evaluating on test data:  72%|███████▏  | 222/307 [00:16<00:06, 14.03it/s][A
-Evaluating on test data:  73%|███████▎  | 224/307 [00:16<00:05, 14.05it/s][A
-Evaluating on test data:  74%|███████▎  | 226/307 [00:16<00:05, 14.08it/s][A
-Evaluating on test data:  74%|███████▍  | 228/307 [00:16<00:05, 14.07it/s][A
-Evaluating on test data:  75%|███████▍  | 230/307 [00:16<00:05, 14.18it/s][A
-Evaluating on test data:  76%|███████▌  | 232/307 [00:16<00:05, 14.04it/s][A
-Evaluating on test data:  76%|███████▌  | 234/307 [00:16<00:05, 14.04it/s][A
-Evaluating on test data:  77%|███████▋  | 236/307 [00:17<00:05, 13.98it/s][A
-Evaluating on test data:  78%|███████▊  | 238/307 [00:17<00:04, 13.97it/s][A
-Evaluating on test data:  78%|███████▊  | 240/307 [00:17<00:04, 14.06it/s][A
-Evaluating on test data:  79%|███████▉  | 242/307 [00:17<00:04, 13.97it/s][A
-Evaluating on test data:  79%|███████▉  | 244/307 [00:17<00:04, 14.14it/s][A
-Evaluating on test data:  80%|████████  | 246/307 [00:17<00:04, 13.96it/s][A
-Evaluating on test data:  81%|████████  | 248/307 [00:17<00:04, 14.02it/s][A
-Evaluating on test data:  81%|████████▏ | 250/307 [00:18<00:04, 13.99it/s][A
-Evaluating on test data:  82%|████████▏ | 252/307 [00:18<00:03, 14.00it/s][A
-Evaluating on test data:  83%|████████▎ | 254/307 [00:18<00:03, 14.21it/s][A
-Evaluating on test data:  83%|████████▎ | 256/307 [00:18<00:03, 14.27it/s][A
-Evaluating on test data:  84%|████████▍ | 258/307 [00:18<00:03, 14.37it/s][A
-Evaluating on test data:  85%|████████▍ | 260/307 [00:18<00:03, 14.51it/s][A
-Evaluating on test data:  85%|████████▌ | 262/307 [00:18<00:03, 14.61it/s][A
-Evaluating on test data:  86%|████████▌ | 264/307 [00:18<00:02, 14.72it/s][A
-Evaluating on test data:  87%|████████▋ | 266/307 [00:19<00:02, 14.79it/s][A
-Evaluating on test data:  87%|████████▋ | 268/307 [00:19<00:02, 14.80it/s][A
-Evaluating on test data:  88%|████████▊ | 270/307 [00:19<00:02, 14.81it/s][A
-Evaluating on test data:  89%|████████▊ | 272/307 [00:19<00:02, 14.91it/s][A
-Evaluating on test data:  89%|████████▉ | 274/307 [00:19<00:02, 14.92it/s][A
-Evaluating on test data:  90%|████████▉ | 276/307 [00:19<00:02, 15.03it/s][A
-Evaluating on test data:  91%|█████████ | 278/307 [00:19<00:01, 15.09it/s][A
-Evaluating on test data:  91%|█████████ | 280/307 [00:20<00:01, 14.99it/s][A
-Evaluating on test data:  92%|█████████▏| 282/307 [00:20<00:01, 15.01it/s][A
-Evaluating on test data:  93%|█████████▎| 284/307 [00:20<00:01, 14.91it/s][A
-Evaluating on test data:  93%|█████████▎| 286/307 [00:20<00:01, 14.74it/s][A
-Evaluating on test data:  94%|█████████▍| 288/307 [00:20<00:01, 14.66it/s][A
-Evaluating on test data:  94%|█████████▍| 290/307 [00:20<00:01, 14.45it/s][A
-Evaluating on test data:  95%|█████████▌| 292/307 [00:20<00:01, 14.51it/s][A
-Evaluating on test data:  96%|█████████▌| 294/307 [00:20<00:00, 14.50it/s][A
-Evaluating on test data:  96%|█████████▋| 296/307 [00:21<00:00, 14.53it/s][A
-Evaluating on test data:  97%|█████████▋| 298/307 [00:21<00:00, 14.51it/s][A
-Evaluating on test data:  98%|█████████▊| 300/307 [00:21<00:00, 14.34it/s][A
-Evaluating on test data:  98%|█████████▊| 302/307 [00:21<00:00, 14.29it/s][A
-Evaluating on test data:  99%|█████████▉| 304/307 [00:21<00:00, 14.16it/s][A
-Evaluating on test data: 100%|█████████▉| 306/307 [00:21<00:00, 14.30it/s][A
-                                                                          [A
