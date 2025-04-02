@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu_mig
+#SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
 #SBATCH --job-name=Task1_Exp1
 #SBATCH --ntasks=1
