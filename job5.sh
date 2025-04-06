@@ -4,7 +4,7 @@
 #SBATCH --job-name=task5_exp1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
-#SBATCH --time=03:00:00
+#SBATCH --time=05:00:00
 #SBATCH --output=slurm_output_%A.txt
 #SBATCH --error=slurm_error_%A.txt
 
