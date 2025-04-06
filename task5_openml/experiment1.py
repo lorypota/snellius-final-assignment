@@ -4,12 +4,13 @@ import torch.nn as nn
 import torchmetrics
 import openml
 import openml_pytorch as opt
-import pytorch_lightning as pl
 from torchvision import transforms
 import argparse
+import wandb
+from pathlib import Path
 
 # Import local modules
-from base_setup import get_openml_transform, get_data_dir
+from .base_setup import get_openml_transform, get_data_dir
 
 # Basic Residual Block (as in ResNet)
 class BasicBlock(nn.Module):
@@ -122,60 +123,109 @@ class BirdClassifier1(nn.Module):
         # Final classification layer
         x = self.fc(x)
         
-        # Apply softmax for OpenML evaluation
+        # Apply softmax
         return torch.softmax(x, dim=1)
+    
+    def predict_proba(self, X):
+        self.eval()  # Set the model to evaluation mode
+        with torch.no_grad():
+            # Convert input to tensor if needed
+            if not isinstance(X, torch.Tensor):
+                X = torch.tensor(X, dtype=torch.float32)
+            
+            # Forward pass (which already includes softmax)
+            probabilities = self(X)
+            
+            # Return as numpy array as expected by OpenML
+            return probabilities.cpu().numpy()
 
-def main():
-    parser = argparse.ArgumentParser(description='Train and evaluate bird classifier on OpenML')
-    parser.add_argument('--api_key', type=str, required=True, help='OpenML API key')
-    parser.add_argument('--epochs', type=int, default=25, help='Number of epochs to train')
-    parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
-    args = parser.parse_args()
+def evaluate_model_and_publish_results(model, trainer):
+    task = openml.tasks.get_task(363465)   # Get data and crossvalidation splits
+    num_classes = len(task.class_labels)   # Sets the correct number of classes
     
-    # Configure OpenML with API key
-    openml.config.apikey = args.api_key
+    # Initialize W&B
+    wandb.init(project="birds_classification_openml", entity="lorypota-eindhoven-university-of-technology")
+    wandb.config.update({
+        "model": "BirdClassifier1",
+        "num_classes": num_classes,
+        "dataset": "Birds OpenML"
+    })
     
-    # Create transform
-    transform = get_openml_transform()
+    # Initialize model
+    model_instance = model(num_classes=num_classes)
     
-    # Create data module
-    data_module = opt.trainer.OpenMLDataModule(
-        type_of_data="image",
-        file_dir=get_data_dir(),
-        filename_col="file_path",
-        target_mode="categorical",
-        target_column="CATEGORY",
-        batch_size=args.batch_size,
-        transform=transform
-    )
+    print("Training model...")
     
-    # Create trainer module
-    trainer = opt.trainer.OpenMLTrainerModule(
-        experiment_name="Assignment-5, BirdClassifier1",
-        data_module=data_module,
-        verbose=True,
-        epoch_count=args.epochs,
-        metrics=[opt.metrics.accuracy],
-        callbacks=[],
-    )
-    
-    # Configure OpenML trainer
-    opt.config.trainer = trainer
-    
-    # Function to evaluate and publish the model
-    def evaluate_model_and_publish_results(model, trainer):
-        task = openml.tasks.get_task(363465)   # Get data and crossvalidation splits
-        num_classes = len(task.class_labels)   # Sets the correct number of classes
-        model = model(num_classes=num_classes)
-        print("Training model...")
-        run = openml.runs.run_model_on_task(model, task, avoid_duplicate_runs=True)
+    # Train model with OpenML
+    try:
+        run = openml.runs.run_model_on_task(model_instance, task, avoid_duplicate_runs=True)
+        
+        # Save model to disk
+        model_path = os.path.join(CHECKPOINTS_DIR, "bird_classifier1.pt")
+        torch.save(model_instance.state_dict(), model_path)
+        print(f"Model saved to {model_path}")
+        
+        # Log to W&B that training is complete
+        wandb.log({"status": "training_complete"})
+        
         print("Adding experiment info to run...")
         run = opt.add_experiment_info_to_run(run=run, trainer=trainer)
-        run.publish()
-        print("Run is uploaded at https://www.openml.org/r/{}".format(run.run_id))
+        
+        try:
+            run.publish()
+            print("Run is uploaded at https://www.openml.org/r/{}".format(run.run_id))
+            # Log run ID to wandb
+            wandb.log({"openml_run_id": run.run_id})
+        except Exception as e:
+            print(f"Error publishing to OpenML: {e}")
+            print("Model was saved locally but couldn't be published to OpenML.")
     
-    # Evaluate and publish the model
-    evaluate_model_and_publish_results(model=BirdClassifier1, trainer=trainer)
+    except Exception as e:
+        print(f"Error during training or evaluation: {e}")
+    
+    finally:
+        wandb.finish()
 
-if __name__ == "__main__":
-    main()
+# Define path constants
+RESULTS_DIR = os.path.join(os.getcwd(), "results")
+CHECKPOINTS_DIR = os.path.join(RESULTS_DIR, "checkpoints")
+os.makedirs(CHECKPOINTS_DIR, exist_ok=True)
+
+parser = argparse.ArgumentParser(description='Train and evaluate bird classifier on OpenML')
+parser.add_argument('--api_key', type=str, required=True, help='OpenML API key')
+parser.add_argument('--epochs', type=int, default=25, help='Number of epochs to train')
+parser.add_argument('--batch_size', type=int, default=64, help='Batch size for training')
+args = parser.parse_args()
+
+# Configure OpenML with API key
+openml.config.apikey = args.api_key
+
+# Create transform
+transform = get_openml_transform()
+
+# Create data module
+data_module = opt.trainer.OpenMLDataModule(
+    type_of_data="image",
+    file_dir=get_data_dir(),
+    filename_col="file_path",
+    target_mode="categorical",
+    target_column="CATEGORY",
+    batch_size=args.batch_size,
+    transform=transform
+)
+
+# Create trainer module
+trainer = opt.trainer.OpenMLTrainerModule(
+    experiment_name="Assignment-5, BirdClassifier1",
+    data_module=data_module,
+    verbose=True,
+    epoch_count=args.epochs,
+    metrics=[opt.metrics.accuracy],
+    callbacks=[],
+)
+
+# Configure OpenML trainer
+opt.config.trainer = trainer
+
+# Evaluate and publish the model
+evaluate_model_and_publish_results(model=BirdClassifier1, trainer=trainer)
