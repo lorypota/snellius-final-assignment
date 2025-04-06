@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
-#SBATCH --job-name=task5_exp2
+#SBATCH --job-name=task3_exp1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
 #SBATCH --time=03:00:00
@@ -23,4 +23,4 @@ mkdir -p results/checkpoints
 mkdir -p results/outputs
 
 # Run experiment5.py with OpenML API key
-srun python -u -m task5_openml.experiment2 --api_key YOUR_API_KEY --epochs 25 --batch_size 64
+srun python -u -m task3_flowers.experiment2 --epochs 25 --batch_size 64
