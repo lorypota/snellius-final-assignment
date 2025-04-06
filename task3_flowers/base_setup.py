@@ -3,10 +3,10 @@ import openml
 import numpy as np
 import random
 from pathlib import Path
-from sklearn.model_selection import train_test_split
 from torchvision import transforms
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from core.dataloading import ImageDataset
+from core.fewshot import SubsetByClass, EpisodicSampler
 
 # -------------------------
 # Dataset setup, splits, transforms, dataloaders
@@ -43,93 +43,6 @@ test_transform = transforms.Compose([
 
 # Create the complete dataset
 flower_ds = ImageDataset(Xi_all, yi_all, transform=transform)
-
-# Class to create subsets by class
-class SubsetByClass(Dataset):
-    def __init__(self, dataset, class_list):
-        self.dataset = dataset
-        self.indices = []
-        
-        # Get indices of samples belonging to the specified classes
-        for i in range(len(dataset)):
-            _, label = dataset[i]
-            if label in class_list:
-                self.indices.append(i)
-        
-        self.classes = class_list
-    
-    def __len__(self):
-        return len(self.indices)
-    
-    def __getitem__(self, idx):
-        return self.dataset[self.indices[idx]]
-
-# Episodic sampler for few-shot learning
-class EpisodicSampler:
-    def __init__(self, dataset, episodes_per_epoch=100, N_way=5, K_shot=5, Q_query=5):
-        """
-        Args:
-            dataset: Dataset to sample from
-            episodes_per_epoch: Number of episodes per epoch
-            N_way: Number of classes per episode
-            K_shot: Number of support examples per class
-            Q_query: Number of query examples per class
-        """
-        self.dataset = dataset
-        self.episodes_per_epoch = episodes_per_epoch
-        self.N_way = N_way
-        self.K_shot = K_shot
-        self.Q_query = Q_query
-        
-        # Group samples by class
-        self.samples_by_class = {}
-        for i in range(len(dataset)):
-            img, label = dataset[i]
-            if label not in self.samples_by_class:
-                self.samples_by_class[label] = []
-            self.samples_by_class[label].append(i)
-    
-    def __iter__(self):
-        for _ in range(self.episodes_per_epoch):
-            # Randomly select N classes
-            selected_classes = random.sample(self.dataset.classes, self.N_way)
-            
-            support_x, support_y = [], []
-            query_x, query_y = [], []
-            
-            # For each selected class
-            for class_idx, cls in enumerate(selected_classes):
-                # Get indices for this class
-                indices = self.samples_by_class[cls]
-                
-                # Ensure we have enough samples
-                if len(indices) < (self.K_shot + self.Q_query):
-                    # If not enough samples, sample with replacement
-                    selected_indices = random.choices(indices, k=(self.K_shot + self.Q_query))
-                else:
-                    # Sample without replacement
-                    selected_indices = random.sample(indices, k=(self.K_shot + self.Q_query))
-                
-                # Split into support and query sets
-                support_indices = selected_indices[:self.K_shot]
-                query_indices = selected_indices[self.K_shot:self.K_shot + self.Q_query]
-                
-                # Add to our support and query sets
-                for idx in support_indices:
-                    img, _ = self.dataset[idx]
-                    support_x.append(img)
-                    support_y.append(class_idx)  # Use relative class index within episode
-                
-                for idx in query_indices:
-                    img, _ = self.dataset[idx]
-                    query_x.append(img)
-                    query_y.append(class_idx)  # Use relative class index within episode
-            
-            # Convert to numpy arrays or tensors as needed
-            yield support_x, support_y, query_x, query_y, selected_classes
-    
-    def __len__(self):
-        return self.episodes_per_epoch
 
 # Function to visualize images
 def visualize_random(dataset, idx_to_label, num_samples=5):
