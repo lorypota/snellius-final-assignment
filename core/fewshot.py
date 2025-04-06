@@ -26,6 +26,9 @@ class SubsetByClass(Dataset):
         return len(self.filtered_indices)
 
     def __getitem__(self, i):
+        if isinstance(i, torch.Tensor):
+            i = i.item()
+        
         real_idx = self.filtered_indices[i]
         img, label = self.base_dataset[real_idx]
         label = int(label)  # Ensure label is an integer
