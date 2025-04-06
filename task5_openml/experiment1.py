@@ -12,6 +12,72 @@ from pathlib import Path
 # Import local modules
 from .base_setup import get_openml_transform, get_data_dir
 
+class WandbCallback:
+    def __init__(self, project_name, entity_name, config=None):
+        self.project_name = project_name
+        self.entity_name = entity_name
+        self.config = config or {}
+        self.initialized = False
+        
+    def initialize(self, num_classes):
+        """Initialize W&B once we know the number of classes"""
+        if not self.initialized:
+            wandb.init(
+                project=self.project_name, 
+                entity=self.entity_name,
+                config=dict(self.config, num_classes=num_classes)
+            )
+            self.initialized = True
+            
+    def on_epoch_end(self, epoch, train_metrics, valid_metrics):
+        """Log metrics at the end of each epoch"""
+        if not self.initialized:
+            return
+            
+        # Log training metrics
+        train_log = {f"train_{k}": v for k, v in train_metrics.items()}
+        # Log validation metrics
+        valid_log = {f"valid_{k}": v for k, v in valid_metrics.items()}
+        # Log epoch
+        combined_log = {**train_log, **valid_log, "epoch": epoch}
+        wandb.log(combined_log)
+        
+    def on_fold_start(self, fold):
+        """Log the current fold"""
+        if not self.initialized:
+            return
+        wandb.log({"fold": fold})
+        
+    def on_fold_end(self, fold, metrics):
+        """Log metrics at the end of a fold"""
+        if not self.initialized:
+            return
+        fold_metrics = {f"fold_{fold}_{k}": v for k, v in metrics.items()}
+        wandb.log(fold_metrics)
+        
+    def on_run_end(self, run):
+        """Log final run information and finish W&B run"""
+        if not self.initialized:
+            return
+        
+        try:
+            # Try to log fold evaluations if available
+            if hasattr(run, 'fold_evaluations'):
+                for metric, fold_values in run.fold_evaluations.items():
+                    if metric == 'predictions':
+                        continue  # Skip predictions, too large
+                    for fold, value in fold_values.items():
+                        wandb.log({f"final_{metric}_fold_{fold}": value})
+                
+            # Log URL of the run on OpenML
+            if hasattr(run, 'run_id'):
+                wandb.log({"openml_run_id": run.run_id})
+                wandb.run.summary["openml_url"] = f"https://www.openml.org/r/{run.run_id}"
+        except Exception as e:
+            print(f"Warning: Error logging final metrics to W&B: {e}")
+        
+        wandb.finish()
+
 # Basic Residual Block (as in ResNet)
 class BasicBlock(nn.Module):
     expansion = 1
@@ -143,47 +209,54 @@ def evaluate_model_and_publish_results(model, trainer):
     task = openml.tasks.get_task(363465)   # Get data and crossvalidation splits
     num_classes = len(task.class_labels)   # Sets the correct number of classes
     
-    # Initialize W&B
-    wandb.init(project="birds_classification_openml", entity="lorypota-eindhoven-university-of-technology")
-    wandb.config.update({
-        "model": "BirdClassifier1",
-        "num_classes": num_classes,
-        "dataset": "Birds OpenML"
-    })
+    # Create W&B callback
+    wandb_cb = WandbCallback(
+        project_name="birds_classification_openml",
+        entity_name="lorypota-eindhoven-university-of-technology",
+        config={
+            "model": model.__name__,
+            "dataset": "BirdsOpenML",
+            "epochs": args.epochs,
+            "batch_size": args.batch_size
+        }
+    )
+    
+    # Initialize W&B with num_classes
+    wandb_cb.initialize(num_classes)
+    
+    # Add our custom callback to the trainer's callbacks
+    if trainer.callbacks is None:
+        trainer.callbacks = []
+    trainer.callbacks.append(wandb_cb)
     
     # Initialize model
     model_instance = model(num_classes=num_classes)
     
     print("Training model...")
-    
-    # Train model with OpenML
     try:
+        # Train model with OpenML
         run = openml.runs.run_model_on_task(model_instance, task, avoid_duplicate_runs=True)
         
         # Save model to disk
-        model_path = os.path.join(CHECKPOINTS_DIR, "bird_classifier1.pt")
+        model_path = os.path.join(CHECKPOINTS_DIR, f"{model.__name__}.pt")
         torch.save(model_instance.state_dict(), model_path)
         print(f"Model saved to {model_path}")
-        
-        # Log to W&B that training is complete
-        wandb.log({"status": "training_complete"})
         
         print("Adding experiment info to run...")
         run = opt.add_experiment_info_to_run(run=run, trainer=trainer)
         
+        # Let the callback know the run is ending
+        wandb_cb.on_run_end(run)
+        
         try:
             run.publish()
             print("Run is uploaded at https://www.openml.org/r/{}".format(run.run_id))
-            # Log run ID to wandb
-            wandb.log({"openml_run_id": run.run_id})
         except Exception as e:
             print(f"Error publishing to OpenML: {e}")
             print("Model was saved locally but couldn't be published to OpenML.")
     
     except Exception as e:
         print(f"Error during training or evaluation: {e}")
-    
-    finally:
         wandb.finish()
 
 # Define path constants
