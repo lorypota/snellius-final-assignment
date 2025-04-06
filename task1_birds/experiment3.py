@@ -11,7 +11,7 @@ from core.logger import ModelLogger
 from .base_setup import train_loader, val_loader, test_loader, label_to_idx, idx_to_label
 
 # ---------------------------
-# Model definitions for Task 1
+# Model definitions
 # ---------------------------
 
 # Basic Residual Block (as in ResNet)
