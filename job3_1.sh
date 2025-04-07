@@ -23,4 +23,4 @@ mkdir -p results/checkpoints
 mkdir -p results/outputs
 
 # Run experiment5.py with OpenML API key
-srun python -u -m task3_flowers.experiment1 --epochs 25 --batch_size 64
+srun python -u -m task3_flowers.experiment1
