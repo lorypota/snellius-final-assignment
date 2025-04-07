@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=gpu_a100
+#SBATCH --partition=gpu
 #SBATCH --gpus=1
 #SBATCH --job-name=task3_exp2
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=9
-#SBATCH --time=01:30:00
+#SBATCH --time=02:00:00
 #SBATCH --output=slurm_output_%A.txt
 #SBATCH --error=slurm_error_%A.txt
 
