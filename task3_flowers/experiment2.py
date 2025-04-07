@@ -178,7 +178,7 @@ def main():
         "embedding_size": 64,
         "learning_rate": 0.0001,  # Lower learning rate for pretrained model
         "weight_decay": 0.01,
-        "max_epochs": 10,
+        "max_epochs": 5,
         "architecture": "ResNet18",
         "N_way": 5,
         "K_shot": 5,
