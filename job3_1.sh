@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=gpu_mig
+#SBATCH --partition=gpu_a100
 #SBATCH --gpus=1
 #SBATCH --job-name=task3_exp1
 #SBATCH --ntasks=1
@@ -12,7 +12,7 @@ module purge
 module load 2023
 module load PyTorch/2.1.2-foss-2023a-CUDA-12.1.1
 
-source my_venv/bin/activate
+source .venv/bin/activate
 
 # Set PYTHONPATH to the project root (one level above the current folder)
 export PYTHONPATH=$(pwd)
