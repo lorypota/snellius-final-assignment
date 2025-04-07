@@ -198,7 +198,7 @@ hyperparams = {
     "embedding_size": 64,
     "learning_rate": 0.001,
     "weight_decay": 0.01,
-    "max_epochs": 20,
+    "max_epochs": 10,
     "architecture": "SimpleCNN",
     "N_way": 5,
     "K_shot": 5,
