@@ -2,317 +2,245 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchmetrics
+import torchvision.models as models
 import pytorch_lightning as pl
+import wandb
+import torchmetrics
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.callbacks import ModelCheckpoint
+
+from base_setup import train_sampler, val_sampler, test_sampler, idx_to_flower, EpisodicDataLoader
+from base_setup import RESULTS_DIR, CHECKPOINTS_DIR, OUTPUTS_DIR
 from core.logger import ModelLogger
-from torch.utils.data import DataLoader
-from core.fewshot import EpisodicSampler
 
-from .base_setup import (
-    train_dataset, val_dataset, test_dataset,
-    train_sampler, val_sampler, test_sampler,
-    idx_to_flower
-)
+# Define the device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Using device: {device}")
 
-# Define collate function
-def episodic_collate(batch):
-    return batch[0]  # Return first (and only) element of batch
-
-# ---------------------------
-# MAML Model with 4-layer CNN
-# ---------------------------
-class SimpleCNN(nn.Module):
-    def __init__(self, in_channels=3, num_classes=5):
-        super().__init__()
-        self.features = nn.Sequential(
-            # Layer 1
-            nn.Conv2d(in_channels, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            
-            # Layer 2
-            nn.Conv2d(64, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            
-            # Layer 3
-            nn.Conv2d(128, 256, kernel_size=3, padding=1),
-            nn.BatchNorm2d(256),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            
-            # Layer 4
-            nn.Conv2d(256, 512, kernel_size=3, padding=1),
-            nn.BatchNorm2d(512),
-            nn.ReLU(),
-            nn.MaxPool2d(2),
-            
-            nn.AdaptiveAvgPool2d((1, 1)),
-            nn.Flatten()
-        )
+# ResNet embedding network
+class ResNetEmbedding(nn.Module):
+    def __init__(self, embedding_size=64):
+        super(ResNetEmbedding, self).__init__()
+        # Load pre-trained ResNet18
+        resnet = models.resnet18(pretrained=True)
+        # Remove the last fully connected layer
+        self.features = nn.Sequential(*list(resnet.children())[:-1])
+        # Add a new FC layer
+        self.fc = nn.Linear(512, embedding_size)
         
-        self.classifier = nn.Linear(512, num_classes)
-    
+        # Initialize the FC layer
+        nn.init.xavier_normal_(self.fc.weight)
+        nn.init.constant_(self.fc.bias, 0)
+        
     def forward(self, x):
         x = self.features(x)
-        x = self.classifier(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
         return x
 
-class MAML(pl.LightningModule):
-    def __init__(self, 
-                 inner_lr=0.01, 
-                 outer_lr=0.001, 
-                 num_inner_steps=5):
-        super().__init__()
-        
-        self.inner_lr = inner_lr
-        self.outer_lr = outer_lr
-        self.num_inner_steps = num_inner_steps
-        
-        # Use a simple CNN for MAML to keep computation manageable
-        self.net = SimpleCNN(num_classes=5)
+# ProtoNet implementation as a PyTorch Lightning module
+class ProtoNetLightning(pl.LightningModule):
+    def __init__(self, embedding_model, learning_rate=0.0001, weight_decay=0.01):
+        super(ProtoNetLightning, self).__init__()
+        self.embedding = embedding_model
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
         
         # Metrics
-        self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=5)
-        self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=5)
-        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=5)
+        self.train_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=5)
+        self.val_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=5)
+        self.test_accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=5)
         
-        self.save_hyperparameters()
-    
-    def forward(self, x):
-        return self.net(x)
-    
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.outer_lr)
-        return optimizer
+    def forward(self, support_x, support_y, query_x):
+        # Extract features
+        support_z = self.embedding(support_x)  # [N_way * K_shot, embedding_size]
+        query_z = self.embedding(query_x)      # [N_way * Q_query, embedding_size]
+        
+        # Get unique class labels
+        classes = torch.unique(support_y)
+        n_classes = len(classes)
+        
+        # Compute prototypes
+        prototypes = torch.zeros(n_classes, support_z.shape[1], device=self.device)
+        for i, c in enumerate(classes):
+            # Select embeddings of the same class and average them
+            mask = support_y == c
+            class_z = support_z[mask]
+            prototypes[i] = class_z.mean(0)
+        
+        # Compute distances between query examples and prototypes
+        dists = torch.cdist(query_z, prototypes)**2  # Squared Euclidean distance
+        
+        # Convert distances to log probabilities (negative distances)
+        query_logits = -dists
+        
+        return query_logits
     
     def training_step(self, batch, batch_idx):
         support_x, support_y, query_x, query_y, _ = batch
         
-        # Meta-training
-        task_losses = []
-        task_accs = []
-        
-        # Manual implementation of differentiable optimization
-        # 1. Create a clone of the model with a copy of parameters
-        fast_weights = [p.clone().detach().requires_grad_(True) for p in self.net.parameters()]
-        
-        # 2. Inner loop: adapt fast_weights on support set
-        for _ in range(self.num_inner_steps):
-            # Forward pass with the current fast weights
-            support_logits = self.forward_with_weights(self.net, fast_weights, support_x)
-            support_loss = F.cross_entropy(support_logits, support_y)
-            
-            # Compute gradients with respect to fast_weights
-            grads = torch.autograd.grad(support_loss, fast_weights, create_graph=True)
-            
-            # Update fast_weights manually
-            fast_weights = [w - self.inner_lr * g for w, g in zip(fast_weights, grads)]
-        
-        # 3. Evaluate the adapted model on query set (outer loop)
-        query_logits = self.forward_with_weights(self.net, fast_weights, query_x)
-        query_loss = F.cross_entropy(query_logits, query_y)
-        query_acc = self.train_acc(torch.argmax(query_logits, dim=1), query_y)
-        
-        task_losses.append(query_loss)
-        task_accs.append(query_acc)
-        
-        # Average losses and accuracies across tasks
-        mean_loss = torch.mean(torch.stack(task_losses))
-        mean_acc = torch.mean(torch.stack(task_accs))
-        
-        self.log("train_loss", mean_loss, prog_bar=True, on_epoch=True)
-        self.log("train_acc", mean_acc, prog_bar=True, on_epoch=True)
-        
-        return mean_loss
-    
-    def forward_with_weights(self, model, weights, x):
-        """Forward pass using the provided weights instead of model.parameters()"""
-        # Get a list of modules containing parameters
-        module_dicts = [m for m in model.modules() if len(list(m.parameters())) > 0]
-        
-        # Cache the original parameters
-        orig_params = []
-        for module in module_dicts:
-            orig_params.append([p.clone() for p in module.parameters()])
-        
-        # Assign the new weights to the model
-        param_index = 0
-        for module in module_dicts:
-            for param_name, _ in module.named_parameters():
-                module._parameters[param_name] = weights[param_index]
-                param_index += 1
-        
         # Forward pass
-        output = model(x)
+        query_logits = self(support_x, support_y, query_x)
         
-        # Restore the original parameters
-        param_index = 0
-        for i, module in enumerate(module_dicts):
-            for j, (param_name, _) in enumerate(module.named_parameters()):
-                module._parameters[param_name] = orig_params[i][j]
+        # Compute loss and accuracy
+        loss = F.cross_entropy(query_logits, query_y)
+        preds = query_logits.argmax(dim=1)
+        acc = self.train_accuracy(preds, query_y)
         
-        return output
+        # Log metrics
+        self.log('train_loss', loss, prog_bar=True, on_step=False, on_epoch=True)
+        self.log('train_acc', acc, prog_bar=True, on_step=False, on_epoch=True)
+        
+        return loss
     
     def validation_step(self, batch, batch_idx):
         support_x, support_y, query_x, query_y, _ = batch
         
-        # Create a clone of the model for adaptation
-        val_net = SimpleCNN(num_classes=5).to(self.device)
-        val_net.load_state_dict(self.net.state_dict())
+        # Forward pass
+        query_logits = self(support_x, support_y, query_x)
         
-        # Inner loop: adapt using support set
-        optimizer = torch.optim.SGD(val_net.parameters(), lr=self.inner_lr)
+        # Compute loss and accuracy
+        loss = F.cross_entropy(query_logits, query_y)
+        preds = query_logits.argmax(dim=1)
+        acc = self.val_accuracy(preds, query_y)
         
-        for _ in range(self.num_inner_steps):
-            support_logits = val_net(support_x)
-            support_loss = F.cross_entropy(support_logits, support_y)
-            
-            optimizer.zero_grad()
-            support_loss.backward()
-            optimizer.step()
+        # Log metrics
+        self.log('val_loss', loss, prog_bar=True, on_epoch=True)
+        self.log('val_acc', acc, prog_bar=True, on_epoch=True)
         
-        # Outer loop: evaluate on query set
-        query_logits = val_net(query_x)
-        query_loss = F.cross_entropy(query_logits, query_y)
-        query_acc = self.val_acc(torch.argmax(query_logits, dim=1), query_y)
-        
-        self.log("val_loss", query_loss, prog_bar=True, on_epoch=True)
-        self.log("val_acc", query_acc, prog_bar=True, on_epoch=True)
-        
-        return query_loss
+        return loss
     
     def test_step(self, batch, batch_idx):
         support_x, support_y, query_x, query_y, _ = batch
         
-        # Create a clone of the model for adaptation
-        test_net = SimpleCNN(num_classes=5).to(self.device)
-        test_net.load_state_dict(self.net.state_dict())
+        # Forward pass
+        query_logits = self(support_x, support_y, query_x)
         
-        # Inner loop: adapt using support set
-        optimizer = torch.optim.SGD(test_net.parameters(), lr=self.inner_lr)
+        # Compute accuracy
+        preds = query_logits.argmax(dim=1)
+        acc = self.test_accuracy(preds, query_y)
         
-        for _ in range(self.num_inner_steps):
-            support_logits = test_net(support_x)
-            support_loss = F.cross_entropy(support_logits, support_y)
-            
-            optimizer.zero_grad()
-            support_loss.backward()
-            optimizer.step()
+        # Log metrics
+        self.log('test_acc', acc, on_epoch=True)
         
-        # Evaluate on query set
-        query_logits = test_net(query_x)
-        query_acc = self.test_acc(torch.argmax(query_logits, dim=1), query_y)
+        return acc
+    
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(
+            self.parameters(), 
+            lr=self.learning_rate,
+            weight_decay=self.weight_decay
+        )
         
-        self.log("test_acc", query_acc, prog_bar=True, on_epoch=True)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=20,  # max epochs
+            eta_min=1e-6
+        )
         
-        return query_acc
+        return {
+            "optimizer": optimizer,
+            "lr_scheduler": {
+                "scheduler": scheduler,
+                "interval": "epoch"
+            }
+        }
 
-# ---------------------------
-# Setup and Training
-# ---------------------------
-# cpus-per-task=9
-num_workers = 9  
+# Create data module for PyTorch Lightning
+class ProtoNetDataModule(pl.LightningDataModule):
+    def __init__(self, train_sampler, val_sampler, test_sampler):
+        super().__init__()
+        self.train_sampler = train_sampler
+        self.val_sampler = val_sampler
+        self.test_sampler = test_sampler
+        
+    def train_dataloader(self):
+        return EpisodicDataLoader(self.train_sampler)
+    
+    def val_dataloader(self):
+        return EpisodicDataLoader(self.val_sampler)
+    
+    def test_dataloader(self):
+        return EpisodicDataLoader(self.test_sampler)
 
-# Create data loaders
-train_loader = DataLoader(
-    train_dataset,
-    batch_sampler=train_sampler,
-    collate_fn=episodic_collate,
-    num_workers=num_workers
-)
-
-val_loader = DataLoader(
-    val_dataset,
-    batch_sampler=val_sampler,
-    collate_fn=episodic_collate,
-    num_workers=num_workers
-)
-
-test_loader = DataLoader(
-    test_dataset,
-    batch_sampler=test_sampler,
-    collate_fn=episodic_collate,
-    num_workers=num_workers
-)
-
-# Initialize model
-model = MAML(inner_lr=0.01, outer_lr=0.001, num_inner_steps=5)
-
-# Setup WandB logging
-wandb_logger = WandbLogger(
-    project="flowers_few_shot", 
-    entity="lorypota-eindhoven-university-of-technology"
-)
-
-# Define paths for model saving
-RESULTS_DIR = os.path.join(os.getcwd(), "results")
-OUTPUTS_DIR = os.path.join(RESULTS_DIR, "outputs")
-os.makedirs(OUTPUTS_DIR, exist_ok=True)
-
-# Initialize the custom ModelLogger
-model_logger = ModelLogger(
-    model_name="maml",
-    test_loader=test_loader,
-    output_dir=OUTPUTS_DIR,
-    device="cuda" if torch.cuda.is_available() else "cpu"
-)
-
-# Log hyperparameters
-wandb_logger.log_hyperparams({
-    "model": "MAML",
-    "backbone": "SimpleCNN",
-    "inner_learning_rate": 0.01,
-    "outer_learning_rate": 0.001,
-    "inner_steps": 5,
-    "n_way": 5,
-    "k_shot": 5,
-    "query_samples": 5,
-    "episodes_per_epoch": 100
-})
-
-# Training
-trainer = pl.Trainer(
-    max_epochs=20,
-    logger=wandb_logger,
-    accelerator="auto",
-    callbacks=[model_logger],
-    log_every_n_steps=10,
-    enable_progress_bar=False
-)
-
-# Start training
-trainer.fit(model, train_loader, val_loader)
-
-# Test on test set
-trainer.test(model, test_loader)
-
-# Evaluate with different K-shot settings
-print("Evaluating with different K-shot settings...")
-model.eval()
-
-# Test with different shot values
-for k_shot in [1, 3, 5, 10]:
-    # Create a new sampler for this K-shot setting
-    test_sampler_k = EpisodicSampler(
-        test_dataset, 
-        episodes_per_epoch=50,
-        N_way=5, 
-        K_shot=k_shot, 
-        Q_query=15
+def main():
+    # Initialize Weights & Biases
+    wandb.init(
+        project="flower-protonet", 
+        name="resnet_protonet",
+        entity="lorypota-eindhoven-university-of-technology"
     )
     
-    test_loader_k = DataLoader(
-        test_dataset,
-        batch_sampler=test_sampler_k,
-        collate_fn=episodic_collate,
-        num_workers=num_workers
+    # Hyperparameters
+    hyperparams = {
+        "embedding_size": 64,
+        "learning_rate": 0.0001,  # Lower learning rate for pretrained model
+        "weight_decay": 0.01,
+        "max_epochs": 20,
+        "architecture": "ResNet18",
+        "N_way": 5,
+        "K_shot": 5,
+        "scheduler": "CosineAnnealing",
+        "pretrained": True
+    }
+    
+    # Create embedding model and ProtoNet
+    embedding_model = ResNetEmbedding(embedding_size=hyperparams["embedding_size"])
+    protonet = ProtoNetLightning(
+        embedding_model,
+        learning_rate=hyperparams["learning_rate"],
+        weight_decay=hyperparams["weight_decay"]
     )
     
-    # Test and log results
-    results = trainer.test(model, test_loader_k)
-    print(f"{k_shot}-shot accuracy: {results[0]['test_acc']:.4f}")
-    wandb_logger.log_metrics({f"test_acc_{k_shot}_shot": results[0]['test_acc']})
+    # Create data module
+    data_module = ProtoNetDataModule(train_sampler, val_sampler, test_sampler)
+    
+    # Create loggers
+    wandb_logger = WandbLogger(
+        project="flower-protonet",
+        entity="lorypota-eindhoven-university-of-technology"
+    )
+    wandb_logger.log_hyperparams(hyperparams)
+    
+    model_logger = ModelLogger(
+        model_name="resnet_protonet",
+        test_loader=None,
+        output_dir=OUTPUTS_DIR,
+        device="cuda" if torch.cuda.is_available() else "cpu"
+    )
+    
+    # Checkpoint callback
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=CHECKPOINTS_DIR,
+        filename='protonet-resnet-{epoch:02d}-{val_loss:.2f}',
+        save_top_k=1,
+        monitor='val_loss',
+        mode='min'
+    )
+    
+    # Train the model
+    trainer = pl.Trainer(
+        max_epochs=hyperparams["max_epochs"],
+        callbacks=[checkpoint_callback, model_logger],
+        logger=wandb_logger,
+        accelerator="auto",
+        devices=1,
+        log_every_n_steps=1,
+        gradient_clip_val=0.5,
+        enable_progress_bar=False
+    )
+    
+    trainer.fit(protonet, data_module)
+    
+    # Test the model
+    test_results = trainer.test(protonet, data_module)
+    print(f"Test Results: {test_results}")
+    
+    # Log test results to W&B
+    wandb.log({"test_accuracy": test_results[0]["test_acc"]})
+    
+    # Close W&B
+    wandb.finish()
+
+if __name__ == "__main__":
+    main()

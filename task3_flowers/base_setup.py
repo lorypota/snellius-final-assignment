@@ -1,22 +1,30 @@
 import os
-import openml
-import numpy as np
 import random
+import numpy as np
+import torch
 from pathlib import Path
-from torchvision import transforms
+
+import openml
 from torch.utils.data import DataLoader
+from torchvision import transforms
+
 from core.dataloading import ImageDataset
 from core.fewshot import SubsetByClass, EpisodicSampler
 
-# -------------------------
-# Dataset setup, splits, transforms, dataloaders
-# -------------------------
+# Define results directory
+RESULTS_DIR = os.path.join(os.getcwd(), "results")
+CHECKPOINTS_DIR = os.path.join(RESULTS_DIR, "checkpoints")
+OUTPUTS_DIR = os.path.join(RESULTS_DIR, "outputs")
 
-# Do not change this code and don't overwrite the data splits created below.
+# Create directories if they don't exist
+os.makedirs(CHECKPOINTS_DIR, exist_ok=True)
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
+
+# Load flower dataset
 FLW = openml.datasets.get_dataset(44283, download_all_files=True)
 data_dir_flower = Path(openml.config.get_cache_directory())/'datasets'/str(FLW.dataset_id)/"FLW_Mini"/"images"
 Xi_all, yi_all, categorical_indicator, attribute_names = FLW.get_data(target=FLW.default_target_attribute)
-Xi_all["file_path"] = Xi_all["FILE_NAME"].apply(lambda x: os.path.join(str(data_dir_flower), x))
+Xi_all["file_path"] = Xi_all["FILE_NAME"].apply(lambda x: os.path.join(data_dir_flower, x))
 print("The dataset has {} images of flowers and {} classes".format(Xi_all.shape[0], len(np.unique(yi_all))))
 
 # Map labels to integers
@@ -24,75 +32,26 @@ flower_to_idx = {label: idx for idx, label in enumerate(sorted(yi_all.unique()))
 idx_to_flower = {idx: label for label, idx in flower_to_idx.items()}
 yi_all = yi_all.map(flower_to_idx)
 
-# Transform for training data. Feel free to change (e.g. add data augmentation).
-transform = transforms.Compose([
+# Define transforms
+train_transform = transforms.Compose([
     transforms.Resize((128, 128)),
-    transforms.RandomHorizontalFlip(p=0.5),
-    transforms.RandomRotation(15),  # Added some rotation for augmentation
-    transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1),  # Added color jitter
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(15),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
 ])
 
-# Transform for test data. Leave this unchanged.
 test_transform = transforms.Compose([
     transforms.Resize((128, 128)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.5]*3, std=[0.5]*3),
 ])
 
-# Create the complete dataset
-flower_ds = ImageDataset(Xi_all, yi_all, transform=transform)
-
-# Function to visualize images
-def visualize_random(dataset, idx_to_label, num_samples=5):
-    """Visualize random samples from the dataset"""
-    import matplotlib.pyplot as plt
-    
-    fig, axes = plt.subplots(1, num_samples, figsize=(15, 3))
-    
-    for i in range(num_samples):
-        idx = random.randint(0, len(dataset)-1)
-        img, label = dataset[idx]
-        # Convert tensor to numpy for visualization
-        img = img.permute(1, 2, 0).numpy()
-        img = (img * 0.5 + 0.5).clip(0, 1)  # denormalize
-        
-        axes[i].imshow(img)
-        axes[i].set_title(f"Class: {idx_to_label[label]}")
-        axes[i].axis('off')
-    
-    plt.tight_layout()
-    plt.show()
-
-def visualize_sets(images, labels, idx_to_label, selected_classes, title):
-    """Visualize support or query sets"""
-    import matplotlib.pyplot as plt
-    
-    n_classes = len(selected_classes)
-    n_samples = len(images) // n_classes
-    
-    fig, axes = plt.subplots(n_classes, n_samples, figsize=(n_samples*3, n_classes*3))
-    
-    for i, (img, label) in enumerate(zip(images, labels)):
-        row = label
-        col = i % n_samples
-        
-        # Convert tensor to numpy for visualization
-        img = img.permute(1, 2, 0).numpy()
-        img = (img * 0.5 + 0.5).clip(0, 1)  # denormalize
-        
-        axes[row, col].imshow(img)
-        axes[row, col].set_title(f"Class: {idx_to_label[selected_classes[label]]}")
-        axes[row, col].axis('off')
-    
-    plt.suptitle(title, fontsize=16)
-    plt.tight_layout()
-    plt.show()
+# Create the dataset
+flower_ds = ImageDataset(Xi_all, yi_all, transform=train_transform)
 
 # Split classes into train, validation, and test sets
-all_classes = list(flower_to_idx.values())
-random.seed(42)  # For reproducibility
+all_classes = flower_ds.classes
 random.shuffle(all_classes)
 
 num_classes = len(all_classes)
@@ -100,17 +59,28 @@ train_classes = all_classes[:int(0.6 * num_classes)]
 val_classes = all_classes[int(0.6 * num_classes):int(0.8 * num_classes)]
 test_classes = all_classes[int(0.8 * num_classes):]
 
-print(f"Classes split: {len(train_classes)} for training, {len(val_classes)} for validation, {len(test_classes)} for testing")
-
-# Create datasets based on class splits
+# Create subsets based on class splits
 train_dataset = SubsetByClass(flower_ds, train_classes)
 val_dataset = SubsetByClass(flower_ds, val_classes)
 test_dataset = SubsetByClass(flower_ds, test_classes)
 
-# Create episodic samplers
 train_sampler = EpisodicSampler(train_dataset, episodes_per_epoch=100, N_way=5, K_shot=5, Q_query=5)
-val_sampler = EpisodicSampler(val_dataset, episodes_per_epoch=100, N_way=5, K_shot=5, Q_query=5)
+val_sampler = EpisodicSampler(val_dataset, episodes_per_epoch=50, N_way=5, K_shot=5, Q_query=5)
 test_sampler = EpisodicSampler(test_dataset, episodes_per_epoch=100, N_way=5, K_shot=5, Q_query=5)
 
-# Create a standard dataloader for the complete dataset if needed
-flower_loader = DataLoader(flower_ds, batch_size=32, shuffle=True)
+# Print stats about the data splits
+print(f"Total classes: {num_classes}")
+print(f"Training classes: {len(train_classes)}")
+print(f"Validation classes: {len(val_classes)}")
+print(f"Test classes: {len(test_classes)}")
+
+# Create a custom DataLoader wrapper for EpisodicSampler
+class EpisodicDataLoader:
+    def __init__(self, episodic_sampler):
+        self.episodic_sampler = episodic_sampler
+        
+    def __iter__(self):
+        return iter(self.episodic_sampler)
+    
+    def __len__(self):
+        return len(self.episodic_sampler)
