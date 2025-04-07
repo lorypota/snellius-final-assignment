@@ -12,6 +12,8 @@ from pathlib import Path
 # Import local modules
 from .base_setup import get_openml_transform, get_data_dir
 
+openml.config.server = 'https://api.openml.org/api/v1/'
+
 class WandbCallback:
     def __init__(self, project_name, entity_name, config=None):
         self.project_name = project_name
