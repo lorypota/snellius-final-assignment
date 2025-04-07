@@ -9,8 +9,10 @@ import torchmetrics
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-from base_setup import train_sampler, val_sampler, test_sampler, idx_to_flower, EpisodicDataLoader
-from base_setup import RESULTS_DIR, CHECKPOINTS_DIR, OUTPUTS_DIR
+from .base_setup import (
+    train_sampler, val_sampler, test_sampler, idx_to_flower, EpisodicDataLoader,
+    RESULTS_DIR, CHECKPOINTS_DIR, OUTPUTS_DIR
+)
 from core.logger import ModelLogger
 
 # Define the device
